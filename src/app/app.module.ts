@@ -14,6 +14,7 @@ import { ForgotPassComponent } from './users/forgot-pass/forgot-pass.component';
 import { FormsModule } from '@angular/forms';
 import { InstruccionesComponent } from './componentes/instrucciones/instrucciones.component';
 import { PickupComponent } from './componentes/pickup/pickup.component';
+import { EnviosPendientesComponent } from './componentes/envios-pendientes/envios-pendientes.component';
 
 export function playerFactory() {
   return player;
@@ -27,7 +28,8 @@ export function playerFactory() {
     SignupComponent,
     ForgotPassComponent,
     InstruccionesComponent,
-    PickupComponent
+    PickupComponent,
+    EnviosPendientesComponent
   ],
   imports: [
     BrowserModule,
