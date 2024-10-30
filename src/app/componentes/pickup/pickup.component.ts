@@ -1,6 +1,7 @@
 import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { AnimationItem } from 'lottie-web';
 import { AnimationOptions } from 'ngx-lottie';
+import { Router } from '@angular/router';
 
 interface Paquete {
   direccion: string;
@@ -16,6 +17,7 @@ interface Paquete {
   styleUrls: ['./pickup.component.scss']
 })
 export class PickupComponent implements OnInit, AfterViewInit {
+  constructor(private router: Router) {}
   @ViewChild('videoElement') videoElement!: ElementRef<HTMLVideoElement>;
   @ViewChild('canvasElement') canvasElement!: ElementRef<HTMLCanvasElement>;
   @ViewChild('signatureCanvas') signatureCanvas!: ElementRef<HTMLCanvasElement>;
@@ -156,4 +158,11 @@ export class PickupComponent implements OnInit, AfterViewInit {
   onAnimate(animationItem: AnimationItem): void {
     console.log(animationItem);
   }
+
+  goToPendingShipments(){
+    this.router.navigate(['/envios-pendientes']);
+  }
+
+  
+
 }

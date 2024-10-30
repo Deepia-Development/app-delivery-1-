@@ -21,7 +21,7 @@ export class InstruccionesComponent {
   }
 
   sendInicio(){
-    this.router.navigate(['/cotizar']);
+    this.router.navigate(['/inicio']);
   }
 
 }

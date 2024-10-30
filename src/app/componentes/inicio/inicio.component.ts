@@ -49,3 +49,6 @@ export class InicioComponent implements OnInit {
     path: '../../../assets/lotties/manos.json',
   };
 }
+
+
+// realizaar una condicion que al escanear pase a la vista de pickup
