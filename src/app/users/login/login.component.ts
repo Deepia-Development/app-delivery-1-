@@ -6,7 +6,7 @@ import { NgModule } from '@angular/core';
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.scss']
+  styleUrls: ['./login.component.scss'],
 })
 export class LoginComponent {
   email: string = '';
@@ -28,7 +28,7 @@ export class LoginComponent {
       // Simulación de almacenamiento de token JWT
       localStorage.setItem('token', 'mock-jwt-token');
       setTimeout(() => {
-        this.router.navigate(['/inicio']);
+        this.router.navigate(['/instrucciones']);
       }, 2000); // Redirige después de 2 segundos
     } else {
       this.errorMessage = 'Por favor, ingrese email y contraseña';
@@ -67,7 +67,8 @@ export class LoginComponent {
   }
 
   togglePasswordVisibility(): void {
-    this.passwordFieldType = this.passwordFieldType === 'password' ? 'text' : 'password';
+    this.passwordFieldType =
+      this.passwordFieldType === 'password' ? 'text' : 'password';
   }
 
   goToForgotPassword() {

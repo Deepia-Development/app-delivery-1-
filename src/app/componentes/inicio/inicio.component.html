@@ -1,40 +1,353 @@
-<div class="flex flex-col items-center justify-start min-h-screen bg-gradient-to-b from-blue-50 to-white p-6">
-  <div class="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
-    <div class="flex flex-col items-center mb-8">
-      <img src="assets/images/Logo_completo.png" alt="Dagpacket Logo" class="w-64 mb-6">
-      <div class="w-40 h-40"> <!-- Aumentado de w-24 h-24 a w-40 h-40 -->
-        <ng-lottie [options]="manos_lottie" (animationCreated)="onAnimate($event)"></ng-lottie>
+<div
+  class="flex flex-col items-center justify-start min-h-screen bg-gradient-to-b from-blue-50 to-white p-6"
+>
+  <!-- Header Section -->
+  <div class="mb-6 flex flex-col items-center">
+    <h1 class="text-3xl font-bold text-orange-600 mb-4">Inicio</h1>
+    <div class="w-40 h-40">
+      <ng-lottie
+        [options]="manos_lottie"
+        (animationCreated)="onAnimate($event)"
+      ></ng-lottie>
+    </div>
+  </div>
+
+  <!-- Welcome Message -->
+  <div class="mb-10 mt-4 ml-4 text-center">
+    <p class="text-md text-indigo-900">
+      Bienvenido <span class="font-bold">{{ usuario }}</span
+      >, tienes
+      <span class="font-bold">{{ totalPaquetes }} paquetes</span>
+      por recolectar hoy.
+    </p>
+  </div>
+
+  <!-- Locker Cards -->
+  <div class="space-y-4 w-full max-w-md">
+    <div
+      *ngFor="let locker of lockerPackages"
+      class="rounded-xl bg-orange-600 p-4 shadow-lg"
+    >
+      <div class="mb-3">
+        <div class="flex items-center justify-between text-white">
+          <h2 class="text-lg font-semibold">Locker {{ locker.lockerName }}</h2>
+          <span class="font-bold">{{ locker.paquetes }} Paquetes</span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <div class="relative flex-1">
+          <input
+            [(ngModel)]="nipInputs[locker.lockerName]"
+            type="password"
+            placeholder="NIP"
+            maxlength="4"
+            class="w-full rounded-lg bg-white/10 px-4 py-2 text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-white/50"
+          />
+        </div>
+        <div class="text-indigo-900">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            class="w-6 h-6 cursor-pointer"
+            (click)="validateNip(locker.lockerName)"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z"
+              clip-rule="evenodd"
+            />
+          </svg>
+        </div>
+
+        <!-- Error Message -->
+        <p *ngIf="nipError" class="text-red-500 text-sm">{{ nipError }}</p>
+        <p *ngIf="nipSuccess" class="text-green-500 text-sm">
+          {{ nipSuccess }}
+        </p>
+
+        <!-- Camera Button -->
+        <button
+          (click)="toggleCamera()"
+          class="rounded-lg bg-white/10 p-2 text-white"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="w-6 h-6"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z"
+            />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z"
+            />
+          </svg>
+        </button>
+
+        <!-- Location Button -->
+        <button
+          (click)="openLocationModal(locker.lockerName)"
+          class="rounded-lg bg-white/10 p-2 text-white"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="w-6 h-6"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+            />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+            />
+          </svg>
+        </button>
       </div>
     </div>
-    
-    <div class="mb-8 bg-blue-50 rounded-lg p-4 border-l-4 border-blue-500">
-      <h2 class="text-lg font-bold text-blue-800 mb-3">Instrucciones:</h2>
-      <ol class="list-decimal list-inside space-y-2 text-gray-700">
-        <li class="flex items-center">
-          <span class="mr-2">📱</span>
-          En la pantalla del locker
-        </li>
-        <li class="flex items-center">
-          <span class="mr-2">👆</span>
-          Selecciona REPARTIDOR
-        </li>
-      </ol>
-    </div>
-    <div class="w-auto">
-      <h2 class="text-lg font-bold text-black-800 mb-3"> ESCANEA CODIGO QR DE LOCKER</h2>
+
+    <!-- Modal for Camera -->
+    <div
+      id="cameraModal"
+      class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center hidden"
+    >
+      <div class="relative w-full max-w-lg mx-4">
+        <!-- Header -->
+        <div class="text-white text-center mb-4">
+          <h2 class="text-xl font-bold">Escanear QR del Locker</h2>
+          <p class="text-sm text-gray-300">
+            Coloca el código QR dentro del marco
+          </p>
+        </div>
+
+        <!-- Camera View with QR Frame -->
+        <div class="relative">
+          <!-- Video Element -->
+          <video
+            #video
+            class="w-full h-64 object-cover rounded-lg"
+            playsinline
+          ></video>
+
+          <!-- QR Scanner Overlay -->
+          <div class="absolute inset-0 flex items-center justify-center">
+            <!-- QR Frame -->
+            <div class="relative w-48 h-48">
+              <!-- Corner Top Left -->
+              <div
+                class="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-orange-500"
+              ></div>
+              <!-- Corner Top Right -->
+              <div
+                class="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-orange-500"
+              ></div>
+              <!-- Corner Bottom Left -->
+              <div
+                class="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-orange-500"
+              ></div>
+              <!-- Corner Bottom Right -->
+              <div
+                class="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-orange-500"
+              ></div>
+
+              <!-- Scanning Animation -->
+              <div class="absolute inset-0 flex items-center justify-center">
+                <div
+                  class="w-full h-1 bg-orange-500/50 animate-[scan_2s_ease-in-out_infinite]"
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Instructions Panel -->
+          <div
+            class="absolute bottom-0 left-0 right-0 bg-black/70 p-4 rounded-b-lg"
+          >
+            <div class="flex items-start space-x-3 text-white">
+              <div class="flex-shrink-0 mt-1">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-5 w-5 text-orange-500"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div class="flex-1 text-sm">
+                <p class="font-medium mb-1">Instrucciones:</p>
+                <ol class="list-decimal list-inside space-y-1 text-gray-300">
+                  <li>Busca el código QR en la pantalla del locker</li>
+                  <li>Mantén la cámara estable</li>
+                  <li>Centra el código QR dentro del marco naranja</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer Buttons -->
+        <div class="mt-4 flex space-x-3">
+          <button
+            (click)="toggleFlashlight()"
+            class="flex-1 bg-white/10 text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-white/20 transition-colors"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+              />
+            </svg>
+            <span>Linterna</span>
+          </button>
+
+          <button
+            (click)="toggleCamera()"
+            class="flex-1 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
     </div>
 
-    <div class="border-3 border-orange-500 rounded-lg overflow-hidden mb-6 shadow-md">
-      <video #video class="w-full h-56 bg-black"></video>
-    </div>
+    <!-- Modal for Location -->
+    <div
+      id="locationModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
+    >
+      <div class="bg-white p-6 rounded-lg max-w-md w-full">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold text-orange-600">
+            Locker {{ selectedLocker?.lockerName }}
+          </h2>
+          <button
+            (click)="closeLocationModal()"
+            class="text-gray-500 hover:text-gray-700"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
 
-    
-    <button (click)="toggleCamera()" class="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 rounded-lg text-lg font-semibold hover:from-orange-600 hover:to-orange-700 transition duration-300 shadow-md flex items-center justify-center">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-      {{ isCameraOn ? 'Detener cámara' : 'Escanear' }}
+        <div class="space-y-4">
+          <!-- Ubicación -->
+          <div>
+            <h3 class="font-semibold text-gray-700">Ubicación:</h3>
+            <p class="text-gray-600">{{ selectedLocker?.ubicacion }}</p>
+          </div>
+
+          <!-- Horario -->
+          <div>
+            <h3 class="font-semibold text-gray-700">Horario:</h3>
+            <p class="text-gray-600">{{ selectedLocker?.horario }}</p>
+          </div>
+
+          <!-- Referencias -->
+          <div>
+            <h3 class="font-semibold text-gray-700">Referencias:</h3>
+            <p class="text-gray-600">{{ selectedLocker?.referencias }}</p>
+          </div>
+
+          <!-- Paquetes -->
+          <div class="bg-orange-100 p-3 rounded-lg">
+            <p class="text-orange-800">
+              Este locker tiene
+              <span class="font-bold"
+                >{{ selectedLocker?.paquetes }} paquetes</span
+              >
+              pendientes por recoger
+            </p>
+          </div>
+        </div>
+
+        <button
+          (click)="closeLocationModal()"
+          class="mt-6 w-full bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors"
+        >
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal for Validation Messages -->
+<div
+  *ngIf="nipError || nipSuccess"
+  class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+>
+  <div class="bg-white p-6 rounded-lg max-w-md w-full">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-bold text-orange-600">
+        {{ nipError ? "Error" : "Éxito" }}
+      </h2>
+      <button
+        (click)="nipError = ''; nipSuccess = ''"
+        class="text-gray-500 hover:text-gray-700"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+    </div>
+    <p class="text-gray-600">{{ nipError || nipSuccess }}</p>
+    <button
+      (click)="nipError = ''; nipSuccess = ''"
+      class="mt-6 w-full bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors"
+    >
+      Cerrar
     </button>
   </div>
 </div>

@@ -1,28 +1,272 @@
-<div class="flex flex-col items-center justify-start min-h-screen bg-gradient-to-b from-blue-50 to-white p-6">
-    <div class="w-full max-w-lg bg-white shadow-lg rounded-xl p-8">
-      <div class="flex flex-col items-center mb-8">
-        <img src="assets/images/Logo_completo.png" alt="Dagpacket Logo" class="w-64 mb-6">
-      </div>
-      
-      <div class="mb-8 bg-blue-50 rounded-lg p-4 border-l-4 border-blue-500">
-        <h2 class="text-lg font-bold text-blue-800 mb-3">Envío #12345</h2>
-        <ol class="list-decimal list-inside space-y-2 text-gray-700">
-          <li class="flex items-center">
-            <span class="mr-2">📦</span>
-            Destinatario: Carlos López
-          </li>
-          <li class="flex items-center">
-            <span class="mr-2">📅</span>
-            Fecha de creación: 2024-10-29
-          </li>
-          <li class="flex items-center">
-            <span class="mr-2">📍</span>
-            Dirección: Calle Falsa 123, Ciudad Ejemplo
-          </li>
-        </ol>
-      </div>
-      <div class="w-auto">
-        <h2 class="text-lg font-bold text-black-800 mb-3">Estado del envío: <span class="text-orange-500">Pendiente</span></h2>
+<app-nav-bar></app-nav-bar>
+<div
+  class="flex flex-col items-center justify-start min-h-screen bg-gradient-to-b from-indigo-50 to-white p-6"
+>
+  <div class="w-full max-w-6xl bg-white shadow-lg rounded-xl p-8">
+    <!-- Header con información del locker -->
+    <div class="flex flex-col items-center mb-8">
+      <img
+        src="assets/images/Logo_completo.png"
+        alt="Dagpacket Logo"
+        class="w-64 mb-6"
+      />
+    </div>
+
+    <!-- Información del locker -->
+    <div class="mb-8 bg-indigo-50 rounded-lg p-4 border-l-4 border-indigo-500">
+      <h2 class="text-lg font-bold text-indigo-800 mb-3">
+        Locker {{ lockerName }}
+      </h2>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <p class="text-gray-700">Ubicación: {{ ubicacion }}</p>
+          <p class="text-gray-700">Horario: {{ horario }}</p>
+        </div>
+        <div>
+          <p class="text-gray-700">Paquetes totales: {{ paquetesTotales }}</p>
+          <p class="text-gray-700 font-bold">
+            Pendientes por recoger:
+            <span class="text-red-500">{{ paquetesPendientes }}</span>
+          </p>
+        </div>
       </div>
     </div>
+
+    <!-- Grid de tarjetas de paquetes -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div
+        *ngFor="let pkg of filteredPackages"
+        class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200"
+      >
+        <!-- Cabecera de la tarjeta -->
+        <div class="bg-indigo-50 p-4 border-b border-indigo-100">
+          <div class="flex justify-between items-center">
+            <h3 class="text-lg font-bold text-indigo-800">
+              Paquete #{{ pkg.id }}
+            </h3>
+            <div class="flex items-center space-x-2">
+              <button
+                (click)="abrirModalReporte(pkg.id)"
+                class="p-1 text-gray-500 hover:text-orange-500"
+                title="Reportar problema"
+              >
+                <svg
+                  class="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+              </button>
+              <span
+                [class]="
+                  pkg.estado === 'Recogido'
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-orange-100 text-orange-800'
+                "
+                class="px-3 py-1 rounded-full text-sm font-medium"
+              >
+                {{ pkg.estado }}
+              </span>
+            </div>
+          </div>
+          <p class="text-gray-600 mt-2">Cajón: {{ pkg.cajon }}</p>
+        </div>
+
+        <!-- Contenido de la tarjeta -->
+        <div class="p-4">
+          <div class="space-y-3">
+            <p class="text-gray-700">
+              <span class="font-medium">Destinatario:</span>
+              {{ pkg.destinatario }}
+            </p>
+            <p class="text-gray-700">
+              <span class="font-medium">Remitente:</span> {{ pkg.remitente }}
+            </p>
+            <p class="text-gray-700">
+              <span class="font-medium">Dirección:</span> {{ pkg.direccion }}
+            </p>
+          </div>
+
+          <!-- Botones de acción -->
+          <div class="mt-4 space-y-2">
+            <button
+              (click)="imprimirGuia(pkg.id)"
+              [disabled]="pkg.guiaImpresa"
+              class="w-full py-2 px-4 rounded-md font-medium transition-colors"
+              [class]="
+                pkg.guiaImpresa
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-orange-500 text-white hover:bg-orange-600'
+              "
+            >
+              {{ pkg.guiaImpresa ? "✓ Guía impresa" : "Imprimir guía" }}
+            </button>
+
+            <button
+              (click)="abrirModalCamara(pkg.id)"
+              [disabled]="pkg.fotoRegistrada"
+              class="w-full py-2 px-4 rounded-md font-medium transition-colors"
+              [class]="
+                pkg.fotoRegistrada
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-indigo-500 text-white hover:bg-indigo-600'
+              "
+            >
+              {{ pkg.fotoRegistrada ? "✓ Foto registrada" : "Tomar foto" }}
+            </button>
+
+            <!-- Botón para mostrar más detalles -->
+            <button
+              (click)="toggleDetails(pkg.id)"
+              class="w-full py-2 px-4 bg-gray-100 text-gray-700 rounded-md font-medium hover:bg-gray-200 transition-colors"
+            >
+              {{ showDetails[pkg.id] ? "Ocultar detalles" : "Ver detalles" }}
+            </button>
+          </div>
+
+          <!-- Detalles expandibles -->
+          <div
+            *ngIf="showDetails[pkg.id]"
+            class="mt-4 pt-4 border-t border-gray-200"
+          >
+            <div class="space-y-2 text-sm text-gray-600">
+              <p>
+                <span class="font-medium">Peso:</span> {{ pkg.detalles.peso }}
+              </p>
+              <p>
+                <span class="font-medium">Dimensiones:</span>
+                {{ pkg.detalles.dimensiones }}
+              </p>
+              <p>
+                <span class="font-medium">Instrucciones:</span>
+                {{ pkg.detalles.instrucciones }}
+              </p>
+              <p>
+                <span class="font-medium">Teléfono:</span>
+                {{ pkg.detalles.telefono }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex justify-center mt-8 mb-6">
+      <button
+        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md"
+        *ngIf="paquetesPendientes === 0"
+        routerLink="/pickup"
+      >
+        Iniciar Repartir
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal de cámara -->
+  <div
+    *ngIf="showCameraModal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <div class="bg-white rounded-lg p-6 w-full max-w-lg">
+      <h3 class="text-xl font-bold mb-4">Tomar foto del paquete</h3>
+      <div class="aspect-video bg-gray-100 mb-4 rounded-lg">
+        <video
+          #video
+          class="w-full h-full object-cover rounded-lg"
+          playsinline
+        ></video>
+      </div>
+      <div class="flex justify-end space-x-3">
+        <button
+          (click)="cerrarModalCamara()"
+          class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+        >
+          Cancelar
+        </button>
+        <button
+          (click)="tomarFoto()"
+          class="px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600"
+        >
+          Tomar foto
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de reporte -->
+  <div
+    *ngIf="showReportModal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <div class="bg-white rounded-lg p-6 w-full max-w-lg">
+      <h3 class="text-xl font-bold mb-4">Reportar problema</h3>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1"
+            >Tipo de problema</label
+          >
+          <select
+            [(ngModel)]="reportType"
+            class="w-full p-2 border border-gray-300 rounded-md"
+          >
+            <option value="">Seleccionar tipo...</option>
+            <option value="paquete_danado">Paquete dañado</option>
+            <option value="paquete_vacio">Paquete vacío</option>
+            <option value="sin_papel">Sin papel en impresora</option>
+            <option value="error_impresora">Error de impresora</option>
+            <option value="otro">Otro</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1"
+            >Descripción</label
+          >
+          <textarea
+            [(ngModel)]="reportDescription"
+            rows="3"
+            class="w-full p-2 border border-gray-300 rounded-md"
+            placeholder="Describe el problema..."
+          ></textarea>
+        </div>
+        <div class="flex justify-end space-x-3 mt-4">
+          <button
+            (click)="resetReporte()"
+            class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+          >
+            Cancelar
+          </button>
+          <button
+            (click)="enviarReporte()"
+            class="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600"
+            [disabled]="!reportType || !reportDescription"
+          >
+            Enviar reporte
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de carga -->
+  <div
+    *ngIf="showLoadingModal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <div
+      class="bg-white rounded-lg p-8 w-full max-w-sm flex flex-col items-center"
+    >
+      <div
+        class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-500 mb-4"
+      ></div>
+      <p class="text-lg font-medium text-gray-700">Imprimiendo guía...</p>
+      <p class="text-sm text-gray-500 mt-2">Por favor, espere un momento</p>
+    </div>
+  </div>
 </div>

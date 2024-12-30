@@ -4,7 +4,6 @@ import { ZXingScannerModule } from '@zxing/ngx-scanner';
 import { LottieModule } from 'ngx-lottie';
 import player from 'lottie-web';
 import { GoogleMapsModule } from '@angular/google-maps';
-
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { InicioComponent } from './componentes/inicio/inicio.component';
@@ -15,6 +14,7 @@ import { FormsModule } from '@angular/forms';
 import { InstruccionesComponent } from './componentes/instrucciones/instrucciones.component';
 import { PickupComponent } from './componentes/pickup/pickup.component';
 import { EnviosPendientesComponent } from './componentes/envios-pendientes/envios-pendientes.component';
+import { NavBarComponent } from './nav-bar/nav-bar.component';
 
 export function playerFactory() {
   return player;
@@ -29,7 +29,8 @@ export function playerFactory() {
     ForgotPassComponent,
     InstruccionesComponent,
     PickupComponent,
-    EnviosPendientesComponent
+    EnviosPendientesComponent,
+    NavBarComponent,
   ],
   imports: [
     BrowserModule,
@@ -37,9 +38,9 @@ export function playerFactory() {
     FormsModule,
     ZXingScannerModule,
     GoogleMapsModule,
-    LottieModule.forRoot({ player: playerFactory })
+    LottieModule.forRoot({ player: playerFactory }),
   ],
   providers: [],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
 })
-export class AppModule { }
+export class AppModule {}

@@ -1,64 +1,154 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+// pickup.component.ts
+import {
+  Component,
+  OnInit,
+  ViewChild,
+  ElementRef,
+  AfterViewInit,
+} from '@angular/core';
 import { AnimationItem } from 'lottie-web';
 import { AnimationOptions } from 'ngx-lottie';
 import { Router } from '@angular/router';
 
-interface Paquete {
-  direccion: string;
-  codigoPostal: string;
-  destinatario: string;
-  ciudad: string;
-  pais: string;
+interface DeliveryPackage {
+  id: string;
+  status: 'pending' | 'picked' | 'delivered';
+  recipient: {
+    name: string;
+    phone: string;
+  };
+  address: {
+    street: string;
+    postalCode: string;
+    city: string;
+    country: string;
+    coordinates: {
+      lat: number;
+      lng: number;
+    };
+  };
+  expanded: boolean;
+  capturedImage: string | null;
+  signature: string | null;
 }
 
 @Component({
   selector: 'app-pickup',
   templateUrl: './pickup.component.html',
-  styleUrls: ['./pickup.component.scss']
+  styleUrls: ['./pickup.component.scss'],
 })
 export class PickupComponent implements OnInit, AfterViewInit {
-  constructor(private router: Router) {}
   @ViewChild('videoElement') videoElement!: ElementRef<HTMLVideoElement>;
   @ViewChild('canvasElement') canvasElement!: ElementRef<HTMLCanvasElement>;
   @ViewChild('signatureCanvas') signatureCanvas!: ElementRef<HTMLCanvasElement>;
 
-  paquete: Paquete = {
-    direccion: 'C. Ing. Lucio Gutierrez 91',
-    codigoPostal: '44130',
-    destinatario: 'Juan Pérez',
-    ciudad: 'Guadalajara, Jal.',
-    pais: 'Mexico',
-  };
+  packages: DeliveryPackage[] = [
+    {
+      id: 'PKG-001',
+      status: 'picked',
+      recipient: {
+        name: 'Juan Pérez',
+        phone: '+52 333 123 4567',
+      },
+      address: {
+        street: 'C. Ing. Lucio Gutierrez 91',
+        postalCode: '44130',
+        city: 'Guadalajara',
+        country: 'México',
+        coordinates: {
+          lat: 20.66959,
+          lng: -103.3854,
+        },
+      },
+      expanded: false,
+      capturedImage: null,
+      signature: null,
+    },
+    {
+      id: 'PKG-002',
+      status: 'picked',
+      recipient: {
+        name: 'María González',
+        phone: '+52 333 987 6543',
+      },
+      address: {
+        street: 'Av. Vallarta 3233',
+        postalCode: '44690',
+        city: 'Guadalajara',
+        country: 'México',
+        coordinates: {
+          lat: 20.67959,
+          lng: -103.3954,
+        },
+      },
+      expanded: false,
+      capturedImage: null,
+      signature: null,
+    },
+    {
+      id: 'PKG-003',
+      status: 'delivered',
+      recipient: {
+        name: 'Carlos Ramírez',
+        phone: '+52 333 456 7890',
+      },
+      address: {
+        street: 'Av. México 2578',
+        postalCode: '44600',
+        city: 'Guadalajara',
+        country: 'México',
+        coordinates: {
+          lat: 20.68959,
+          lng: -103.3754,
+        },
+      },
+      expanded: false,
+      capturedImage: null,
+      signature: null,
+    },
+  ];
 
-  position = {
-    lat: 20.66959,
-    lng: -103.38540
-  };
-
-  label = {
-    color: 'red',
-    text: 'Marcador de ejemplo'
-  };
-
-  deliver_lottie: AnimationOptions = {
-    path: '../../../assets/lotties/deliver.json',
-  };
-
-  capturedImage: string | null = null;
-  showCamera: boolean = false;
+  currentSigningPackage: DeliveryPackage | null = null;
+  activePackage: DeliveryPackage | null = null;
+  showCamera = false;
+  showSignature = false;
   stream: MediaStream | null = null;
+  isLoading = false;
 
   private signatureCtx!: CanvasRenderingContext2D;
   private isDrawing = false;
 
+  deliver_lottie: AnimationOptions = {
+    path: '../../../assets/lotties/deliver.json',
+    autoplay: true,
+    loop: true,
+  };
+
+  constructor(private router: Router) {}
+
   ngOnInit(): void {
-    // Inicialización adicional si es necesaria
+    this.isLoading = true;
+    setTimeout(() => {
+      this.isLoading = false;
+    }, 1000);
   }
 
   ngAfterViewInit(): void {
-    this.initSignatureCanvas();
+    if (this.signatureCanvas) {
+      this.initSignatureCanvas();
+    }
   }
 
+  togglePackage(pkg: DeliveryPackage): void {
+    this.packages.forEach((p) => {
+      if (p.id !== pkg.id) {
+        p.expanded = false;
+      }
+    });
+    pkg.expanded = !pkg.expanded;
+  }
+
+  // Funciones de firma
   private initSignatureCanvas(): void {
     const canvas = this.signatureCanvas.nativeElement;
     this.signatureCtx = canvas.getContext('2d')!;
@@ -71,10 +161,17 @@ export class PickupComponent implements OnInit, AfterViewInit {
     canvas.addEventListener('mouseup', this.stopDrawing.bind(this));
     canvas.addEventListener('mouseout', this.stopDrawing.bind(this));
 
-    // Para dispositivos táctiles
-    canvas.addEventListener('touchstart', this.startDrawing.bind(this));
-    canvas.addEventListener('touchmove', this.draw.bind(this));
-    canvas.addEventListener('touchend', this.stopDrawing.bind(this));
+    canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      this.startDrawing(e);
+    });
+    canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      this.draw(e);
+    });
+    canvas.addEventListener('touchend', () => {
+      this.stopDrawing();
+    });
   }
 
   private startDrawing(event: MouseEvent | TouchEvent): void {
@@ -87,8 +184,15 @@ export class PickupComponent implements OnInit, AfterViewInit {
 
     const canvas = this.signatureCanvas.nativeElement;
     const rect = canvas.getBoundingClientRect();
-    const x = (event instanceof MouseEvent ? event.clientX : event.touches[0].clientX) - rect.left;
-    const y = (event instanceof MouseEvent ? event.clientY : event.touches[0].clientY) - rect.top;
+    let x, y;
+
+    if (event instanceof MouseEvent) {
+      x = event.clientX - rect.left;
+      y = event.clientY - rect.top;
+    } else {
+      x = event.touches[0].clientX - rect.left;
+      y = event.touches[0].clientY - rect.top;
+    }
 
     this.signatureCtx.lineTo(x, y);
     this.signatureCtx.stroke();
@@ -101,68 +205,115 @@ export class PickupComponent implements OnInit, AfterViewInit {
     this.signatureCtx.beginPath();
   }
 
+  // Funciones de firma y cámara
+  openSignature(pkg: DeliveryPackage): void {
+    this.currentSigningPackage = pkg; // Update this line
+    this.showSignature = true;
+    setTimeout(() => {
+      this.initSignatureCanvas();
+    });
+  }
+
   clearSignature(): void {
-    const canvas = this.signatureCanvas.nativeElement;
-    this.signatureCtx.clearRect(0, 0, canvas.width, canvas.height);
+    if (this.signatureCanvas) {
+      const canvas = this.signatureCanvas.nativeElement;
+      this.signatureCtx.clearRect(0, 0, canvas.width, canvas.height);
+    }
   }
 
   saveSignature(): void {
-    const signatureImage = this.signatureCanvas.nativeElement.toDataURL('image/png');
-    console.log('Firma guardada:', signatureImage);
-    // Aquí puedes implementar la lógica para guardar o enviar la firma
+    if (this.currentSigningPackage && this.signatureCanvas) {
+      const signatureImage =
+        this.signatureCanvas.nativeElement.toDataURL('image/png');
+      this.currentSigningPackage.signature = signatureImage;
+      this.closeSignatureModal();
+    }
   }
 
-  async captureImage() {
+  async captureImage(pkg: DeliveryPackage): Promise<void> {
+    this.activePackage = pkg;
     this.showCamera = true;
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      this.videoElement.nativeElement.srcObject = this.stream;
+      if (this.videoElement) {
+        this.videoElement.nativeElement.srcObject = this.stream;
+      }
     } catch (err) {
       console.error('Error al acceder a la cámara:', err);
-      alert('No se pudo acceder a la cámara. Por favor, asegúrese de que tiene una cámara conectada y que ha dado los permisos necesarios.');
+      alert(
+        'No se pudo acceder a la cámara. Por favor, verifique los permisos.'
+      );
       this.showCamera = false;
     }
   }
 
-  takePicture() {
+  takePicture(pkg?: DeliveryPackage): void {
+    if (!this.activePackage || !this.videoElement || !this.canvasElement)
+      return;
+
     const video = this.videoElement.nativeElement;
     const canvas = this.canvasElement.nativeElement;
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-    canvas.getContext('2d')?.drawImage(video, 0, 0);
-    this.capturedImage = canvas.toDataURL('image/jpeg');
-    this.stopCamera();
+    const context = canvas.getContext('2d');
+
+    if (context) {
+      context.drawImage(video, 0, 0);
+      this.activePackage.capturedImage = canvas.toDataURL('image/jpeg');
+      this.stopCamera();
+    }
   }
 
-  stopCamera() {
+  stopCamera(): void {
     if (this.stream) {
-      this.stream.getTracks().forEach(track => track.stop());
+      this.stream.getTracks().forEach((track) => track.stop());
     }
     this.showCamera = false;
+    this.activePackage = null;
   }
 
-  marcarComoEntregado(): void {
-    if (!this.capturedImage) {
-      alert('Por favor, capture una imagen de evidencia antes de marcar como entregado.');
+  marcarComoEntregado(pkg: DeliveryPackage): void {
+    if (!this.validateDelivery(pkg)) {
       return;
     }
-    if (!this.signatureCanvas.nativeElement.toDataURL().includes('data:image/png')) {
-      alert('Por favor, pida al cliente que firme antes de marcar como entregado.');
-      return;
+
+    this.isLoading = true;
+    setTimeout(() => {
+      pkg.status = 'delivered';
+      pkg.expanded = false;
+      this.isLoading = false;
+      alert('¡Paquete marcado como entregado correctamente!');
+    }, 1500);
+  }
+
+  private validateDelivery(pkg: DeliveryPackage): boolean {
+    if (!pkg.capturedImage) {
+      alert(
+        'Por favor, capture una foto de evidencia antes de marcar como entregado.'
+      );
+      return false;
     }
-    console.log('Paquete marcado como entregado');
-    // Aquí puedes implementar la lógica para marcar el paquete como entregado
-    // y enviar la evidencia (this.capturedImage) y la firma al servidor
+
+    if (!pkg.signature) {
+      alert(
+        'Por favor, obtenga la firma del cliente antes de marcar como entregado.'
+      );
+      return false;
+    }
+
+    return true;
   }
 
   onAnimate(animationItem: AnimationItem): void {
     console.log(animationItem);
   }
 
-  goToPendingShipments(){
-    this.router.navigate(['/envios-pendientes']);
+  closeSignatureModal(): void {
+    this.currentSigningPackage = null;
+    this.showSignature = false;
   }
 
-  
-
+  closeCamera(): void {
+    this.stopCamera();
+  }
 }
